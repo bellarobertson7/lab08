@@ -16,13 +16,48 @@ library(tidymodels)
 ```{r, warning=FALSE, message=FALSE}
 library(openintro)
 glimpse(email)
+view(email)
 ```
 
 1. What proportion of emails are spam? Calculate the proportion of spam separately for emails with and without the word “winner”.
 
+```{r}
+email %>%
+  count(winner, spam) %>%
+  group_by(winner) %>%
+  mutate(prop = n/sum(n))
+
+email %>%
+  count(spam) %>%
+  mutate(prop = n/sum(n))
+```
+
+
 2. Fit a logistic regression of `spam` on `winner` and write down the fitted model. Use `predict(..., type = "prob")` to find the predicted probability of spam for each group. Compare them with your previously calculated proportions.  
 
+```{r}
+spam_fit <- logistic_reg() %>%
+  set_engine("glm") %>%
+  fit(spam ~ winner, data = email) 
+
+predict(spam_fit, type = "prob",
+        new_data = email)
+
+tidy(spam_fit)
+```
+
+
 3. How about fitting a logistic regression of `spam` on `winner` and `num_char`? Calculate the confusion matrix of the fitted logistic model on this new model, and compare with the confusion matrix result of the previous model, relying on `winner` only. Explain the differences on confusion matrix.
+
+```{r}
+logistic_reg() %>%
+  set_engine("glm") %>%
+  fit(spam ~ winner + num_char, data = email) %>%
+  tidy()
+
+conf_mat()
+```
+
 
 **Hint:** `augment()` adds the predicted class (`.pred_class`) to the data.
 It labels an email as spam when its predicted probability is above 0.5.
